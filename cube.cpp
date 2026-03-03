@@ -104,10 +104,11 @@ public:
 };
 
 int
-is_drawn(int i, int j, std::vector<Point> vertices, double z)
+is_drawn(int i, int j, std::vector<Point> vertices, double z, double sigma)
 {
   for (auto v : vertices) {
-    if (std::round(v.x / (z)) == i && std::round(v.y / (z)) == j) {
+    if (std::round(sigma * v.x / (v.z - z)) == i &&
+        std::round(sigma * v.y / (v.z - z)) == j) {
       if (v.z <= -2)
         return 1;
       else if (v.z >= 2)
@@ -124,23 +125,26 @@ is_drawn(int i,
          int j,
          std::vector<Point> vertices,
          std::vector<Point> edges,
-         double z)
+         double z,
+         double sigma)
 {
   for (auto v : vertices) {
-    if (std::round(v.x / (z)) == i && std::round(v.y / (z)) == j) {
-      if (v.z <= -2)
-        return 1;
-      else if (v.z >= 2)
+    if (std::round(sigma * (v.x / (v.z - z))) == i &&
+        std::round(sigma * (v.y / (v.z - z))) == j) {
+      if (v.z >= 0)
         return 3;
+      else if (v.z <= -6)
+        return 1;
       else
         return 2;
     }
   }
   for (auto e : edges) {
-    if (std::round(e.x / z) == i && std::round(e.y / z) == j) {
-      if (e.z >= 3)
-        return -1;
-      return -2;
+    if (std::round(sigma * (e.x / (e.z - z))) == i &&
+        std::round(sigma * (e.y / (e.z - z))) == j) {
+      if (e.z <= -8)
+        return -2;
+      return -1;
     }
   }
   return 0;
@@ -168,12 +172,14 @@ main()
   using namespace std::chrono;
   int fps = 60;
   int frame_time = 1000 / fps;
-  double speed = 1.5;
+  double speed = 1.25;
   float dt = 0.05;
-  float z = 0.5;
-  float dz = 0.05;
+  float z = 6;
+  float sigma = 23;
+  float dz = 1.1;
   float dtheta = 0.02;
   int term_x = 32, term_y = 32;
+  Point c1 = Point(0, 0, 0);
 
   std::vector<Point> vertices = {
     Point(4, 4, -4), Point(4, -4, -4), Point(-4, 4, -4), Point(-4, -4, -4),
@@ -186,6 +192,7 @@ main()
   };
 
   Object3D cube(vertices);
+  cube.center = c1;
 
   std::cout << "\033[3J" << std::endl;
   double theta = 0;
@@ -194,29 +201,26 @@ main()
   std::vector<Point> new_edges = interpolate_vertices(new_vertices, edges, dt);
   while (true) {
 
-    std::cout << "\033[2J\n";
+    std::cout << "\033[2J\n\n\n";
     for (int i = 0; i < term_y; i++) {
       for (int j = 0; j < term_x; j++) {
-        int vertices_drawn = is_drawn(j - term_x / 2,
-                                      i - term_y / 2,
-                                      new_vertices,
-                                      new_edges,
-                                      z + dz * std::sin(theta));
+        int vertices_drawn = is_drawn(
+          j - term_x / 2, i - term_y / 2, new_vertices, new_edges, z, sigma);
         switch (vertices_drawn) {
           case 3:
-            std::cout << "..";
+            std::cout << "@@";
             break;
           case 2:
             std::cout << "oo";
             break;
           case 1:
-            std::cout << "@@";
+            std::cout << ". ";
             break;
           case -1:
-            std::cout << "  ";
+            std::cout << ". ";
             break;
           case -2:
-            std::cout << ". ";
+            std::cout << "  ";
             break;
           case 0:
             std::cout << "  ";
@@ -227,6 +231,7 @@ main()
     }
     cube.orient =
       cube.orient + Orientation(0.001 * speed, 0.05 * speed, 0.01 * speed);
+    cube.center = Point(0, 0, -z + dz * std::sin(theta));
     theta += dtheta;
     new_vertices = cube.get_vertices();
     new_edges = interpolate_vertices(new_vertices, edges, dt);
