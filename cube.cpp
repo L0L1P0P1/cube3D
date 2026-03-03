@@ -40,6 +40,10 @@ public:
 
   Point operator+(Point rhs) { return Point(x + rhs.x, y + rhs.y, z + rhs.z); }
   Point operator-(Point rhs) { return Point(x - rhs.x, y - rhs.y, z - rhs.z); }
+  Point operator*(float scalar)
+  {
+    return Point(x * scalar, y * scalar, z * scalar);
+  }
 };
 
 struct Orientation
@@ -71,11 +75,10 @@ class Object3D
 {
 public:
   std::vector<Point> vertices;
-  // std::vector<int[2]> edges;
   Point center = Point(0, 0, 0);
   Orientation orient = Orientation(0, 0, 0);
 
-  // Object3D(std::vector<Point> vertices, std::vector<int[2]> edges)
+  // Object3D(std::vector<Point> vertices, int edges[][2])
   //   : vertices(vertices)
   //   , edges(edges)
   // {
@@ -97,6 +100,7 @@ public:
 
     return new_vertices;
   }
+  int edges[][2];
 };
 
 int
@@ -116,42 +120,103 @@ is_drawn(int i, int j, std::vector<Point> vertices, double z)
 }
 
 int
+is_drawn(int i,
+         int j,
+         std::vector<Point> vertices,
+         std::vector<Point> edges,
+         double z)
+{
+  for (auto v : vertices) {
+    if (std::round(v.x / (z)) == i && std::round(v.y / (z)) == j) {
+      if (v.z <= -2)
+        return 1;
+      else if (v.z >= 2)
+        return 3;
+      else
+        return 2;
+    }
+  }
+  for (auto e : edges) {
+    if (std::round(e.x / z) == i && std::round(e.y / z) == j) {
+      if (e.z >= 3)
+        return -1;
+      return -2;
+    }
+  }
+  return 0;
+}
+
+std::vector<Point>
+interpolate_vertices(std::vector<Point> vertices, int edges[][2], float dt)
+{
+  std::vector<Point> edge_vertices;
+  for (int i = 0; i < 12; i++) {
+    for (float t = 0; t < 1; t += dt) {
+      if (t == 0)
+        continue;
+      else
+        edge_vertices.push_back(vertices[edges[i][0]] * t +
+                                vertices[edges[i][1]] * (1 - t));
+    }
+  }
+  return edge_vertices;
+}
+
+int
 main()
 {
   using namespace std::chrono;
-  int fps = 120;
+  int fps = 60;
   int frame_time = 1000 / fps;
-  double speed = 0.5;
+  double speed = 1.5;
+  float dt = 0.05;
+  float z = 0.5;
+  float dz = 0.05;
+  float dtheta = 0.02;
+  int term_x = 32, term_y = 32;
 
   std::vector<Point> vertices = {
     Point(4, 4, -4), Point(4, -4, -4), Point(-4, 4, -4), Point(-4, -4, -4),
     Point(4, 4, 4),  Point(4, -4, 4),  Point(-4, 4, 4),  Point(-4, -4, 4),
   };
 
+  int edges[][2] = {
+    { 0, 1 }, { 0, 4 }, { 0, 2 }, { 3, 7 }, { 3, 2 }, { 3, 1 },
+    { 6, 7 }, { 6, 2 }, { 6, 4 }, { 5, 4 }, { 5, 1 }, { 5, 7 }
+  };
+
   Object3D cube(vertices);
 
-  std::cout << "\033[2J" << std::endl;
+  std::cout << "\033[3J" << std::endl;
   double theta = 0;
 
   std::vector<Point> new_vertices = cube.get_vertices();
+  std::vector<Point> new_edges = interpolate_vertices(new_vertices, edges, dt);
   while (true) {
-    int term_x = 48, term_y = 36;
 
+    std::cout << "\033[2J\n";
     for (int i = 0; i < term_y; i++) {
       for (int j = 0; j < term_x; j++) {
-        int drawn = is_drawn(j - term_x / 2,
-                             i - term_y / 2,
-                             new_vertices,
-                             0.8 + 0.2 * std::sin(theta));
-        switch (drawn) {
+        int vertices_drawn = is_drawn(j - term_x / 2,
+                                      i - term_y / 2,
+                                      new_vertices,
+                                      new_edges,
+                                      z + dz * std::sin(theta));
+        switch (vertices_drawn) {
           case 3:
             std::cout << "..";
             break;
           case 2:
-            std::cout << "**";
+            std::cout << "oo";
             break;
           case 1:
             std::cout << "@@";
+            break;
+          case -1:
+            std::cout << "  ";
+            break;
+          case -2:
+            std::cout << ". ";
             break;
           case 0:
             std::cout << "  ";
@@ -162,9 +227,9 @@ main()
     }
     cube.orient =
       cube.orient + Orientation(0.001 * speed, 0.05 * speed, 0.01 * speed);
-    std::this_thread::sleep_for(frame_time * 1ms);
+    theta += dtheta;
     new_vertices = cube.get_vertices();
-    theta += 0.01;
-    std::cout << "\033[3J" << std::endl;
+    new_edges = interpolate_vertices(new_vertices, edges, dt);
+    std::this_thread::sleep_for(frame_time * 1ms);
   }
 }
