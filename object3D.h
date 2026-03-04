@@ -87,18 +87,6 @@ public:
   {
   }
 
-  std::vector<Point> get_vertices()
-  {
-    std::vector<Point> new_vertices;
-    for (auto v : vertices) {
-      new_vertices.push_back(
-        v.rotate_x(orient.alpha).rotate_y(orient.beta).rotate_z(orient.gamma) +
-        center);
-    }
-
-    return new_vertices;
-  }
-
   Point apply_orientation(Point& point)
   {
     return point.rotate_x(orient.alpha)
@@ -121,7 +109,7 @@ public:
           std::round(frame.scale * (edge.y / (edge.z - frame.z_level)) +
                      (float)frame.FRAME_Y / 2);
         if (edge_x < frame.FRAME_X && edge_x >= 0 && edge_y < frame.FRAME_Y &&
-            edge_y >= 0) {
+            edge_y >= 0 && frame.z_level > edge.z) {
           if (frame.pixel_grid[edge_x][edge_y] < 2)
             frame.pixel_grid[edge_x][edge_y] = 2;
         }
@@ -137,7 +125,8 @@ public:
                            (float)frame.FRAME_X / 2);
       int p_y = std::round(frame.scale * (p.y / (p.z - frame.z_level)) +
                            (float)frame.FRAME_Y / 2);
-      if (p_x < frame.FRAME_X && p_x >= 0 && p_y < frame.FRAME_Y && p_y >= 0) {
+      if (p_x < frame.FRAME_X && p_x >= 0 && p_y < frame.FRAME_Y && p_y >= 0 &&
+          frame.z_level > p.z) {
         if (frame.pixel_grid[p_x][p_y] < 6)
           frame.pixel_grid[p_x][p_y] = 4;
       }

@@ -8,7 +8,7 @@ const int fps = 100;
 const double speed = 0.8;
 const float dt = 0.01;
 const float z_level = 12;
-const float dz = 4;
+const float dz = 5;
 const float scale = 25;
 const float dtheta = 0.005;
 
