@@ -1,3 +1,4 @@
+#include "frame.h"
 #include <cmath>
 #include <vector>
 
@@ -68,32 +69,6 @@ struct Orientation
   Orientation operator+=(Orientation rhs) { return *this + rhs; }
 };
 
-class Frame
-{
-public:
-  const int FRAME_X;
-  const int FRAME_Y;
-  const double z;
-  const double sigma;
-
-  std::vector<std::vector<int>> frame;
-
-  Frame(int FRAME_X, int FRAME_Y, double z, double sigma)
-    : FRAME_X(FRAME_X)
-    , FRAME_Y(FRAME_Y)
-    , z(z)
-    , sigma(sigma)
-  {
-    for (int i = 0; i < FRAME_X; i++) {
-      std::vector<int> row;
-      for (int j = 0; j < FRAME_Y; j++)
-        row.push_back(0);
-
-      frame.push_back(row);
-    }
-  }
-};
-
 class Object3D
 {
 public:
@@ -139,14 +114,16 @@ public:
       Point q = apply_orientation(vertices[e[1]]);
       for (float t = 0; t <= 1; t += dt) {
         Point edge = p * t + q * (1 - t);
-        int edge_x = std::round(frame.sigma * (edge.x / (edge.z - frame.z)) +
-                                (float)frame.FRAME_X / 2);
-        int edge_y = std::round(frame.sigma * (edge.y / (edge.z - frame.z)) +
-                                (float)frame.FRAME_Y / 2);
+        int edge_x =
+          std::round(frame.scale * (edge.x / (edge.z - frame.z_level)) +
+                     (float)frame.FRAME_X / 2);
+        int edge_y =
+          std::round(frame.scale * (edge.y / (edge.z - frame.z_level)) +
+                     (float)frame.FRAME_Y / 2);
         if (edge_x < frame.FRAME_X && edge_x >= 0 && edge_y < frame.FRAME_Y &&
             edge_y >= 0) {
-          if (frame.frame[edge_x][edge_y] < 2)
-            frame.frame[edge_x][edge_y] = 2;
+          if (frame.pixel_grid[edge_x][edge_y] < 2)
+            frame.pixel_grid[edge_x][edge_y] = 2;
         }
       }
     }
@@ -156,13 +133,13 @@ public:
   {
     for (auto v : vertices) {
       Point p = apply_orientation(v);
-      int p_x = std::round(frame.sigma * (p.x / (p.z - frame.z)) +
+      int p_x = std::round(frame.scale * (p.x / (p.z - frame.z_level)) +
                            (float)frame.FRAME_X / 2);
-      int p_y = std::round(frame.sigma * (p.y / (p.z - frame.z)) +
+      int p_y = std::round(frame.scale * (p.y / (p.z - frame.z_level)) +
                            (float)frame.FRAME_Y / 2);
       if (p_x < frame.FRAME_X && p_x >= 0 && p_y < frame.FRAME_Y && p_y >= 0) {
-        if (frame.frame[p_x][p_y] < 6)
-          frame.frame[p_x][p_y] = 4;
+        if (frame.pixel_grid[p_x][p_y] < 6)
+          frame.pixel_grid[p_x][p_y] = 4;
       }
     }
   }
