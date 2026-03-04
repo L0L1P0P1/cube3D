@@ -42,19 +42,19 @@ is_drawn(int i,
     if (std::round(sigma * (v.x / (v.z - z))) == i &&
         std::round(sigma * (v.y / (v.z - z))) == j) {
       if (v.z >= 0)
-        return 3;
+        return 5;
       else if (v.z <= -6)
-        return 1;
+        return 3;
       else
-        return 2;
+        return 4;
     }
   }
   for (auto e : edges) {
     if (std::round(sigma * (e.x / (e.z - z))) == i &&
         std::round(sigma * (e.y / (e.z - z))) == j) {
       if (e.z <= -8)
-        return -2;
-      return -1;
+        return 1;
+      return 2;
     }
   }
   return 0;
@@ -86,30 +86,31 @@ initiate_frame(int x, int y)
     for (int j = 0; j < y; j++) {
       row.push_back(0);
     }
+    frame.push_back(row);
   }
   return frame;
 }
 
 void
-draw_frame(std::vector<std::vector<int>> frame)
+show_frame(std::vector<std::vector<int>> frame)
 {
   std::cout << "\033[2J\n";
   for (auto i : frame) {
     for (auto j = i.begin(); j < i.end(); ++j) {
       switch (*j) {
-        case 3:
+        case 5:
           std::cout << "@@";
           break;
-        case 2:
+        case 4:
           std::cout << "oo";
           break;
+        case 3:
+          std::cout << ". ";
+          break;
+        case 2:
+          std::cout << ". ";
+          break;
         case 1:
-          std::cout << ". ";
-          break;
-        case -1:
-          std::cout << ". ";
-          break;
-        case -2:
           std::cout << "  ";
           break;
         case 0:
@@ -118,6 +119,7 @@ draw_frame(std::vector<std::vector<int>> frame)
       }
       *j = 0;
     }
+    std::cout << "\n";
   }
 };
 
@@ -139,7 +141,7 @@ main()
                                           { 6, 7 }, { 6, 2 }, { 6, 4 },
                                           { 5, 4 }, { 5, 1 }, { 5, 7 } };
 
-  Object3D cube(vertices);
+  Object3D cube(vertices, edges, dt);
   cube.center = c1;
 
   double theta = 0;

@@ -68,16 +68,47 @@ struct Orientation
   Orientation operator+=(Orientation rhs) { return *this + rhs; }
 };
 
+class Frame
+{
+public:
+  const int FRAME_X;
+  const int FRAME_Y;
+  const double z;
+  const double sigma;
+
+  std::vector<std::vector<int>> frame;
+
+  Frame(int FRAME_X, int FRAME_Y, double z, double sigma)
+    : FRAME_X(FRAME_X)
+    , FRAME_Y(FRAME_Y)
+    , z(z)
+    , sigma(sigma)
+  {
+    for (int i = 0; i < FRAME_X; i++) {
+      std::vector<int> row;
+      for (int j = 0; j < FRAME_Y; j++)
+        row.push_back(0);
+
+      frame.push_back(row);
+    }
+  }
+};
+
 class Object3D
 {
 public:
+  const double dt;
   std::vector<Point> vertices;
   std::vector<std::vector<int>> edges;
   Point center = Point(0, 0, 0);
   Orientation orient = Orientation(0, 0, 0);
 
-  Object3D(std::vector<Point> vertices)
+  Object3D(std::vector<Point> vertices,
+           std::vector<std::vector<int>> edges,
+           double dt)
     : vertices(vertices)
+    , edges(edges)
+    , dt(dt)
   {
   }
 
@@ -91,5 +122,44 @@ public:
     }
 
     return new_vertices;
+  }
+
+  Point apply_orientation(Point& point)
+  {
+    return point.rotate_x(orient.alpha)
+             .rotate_y(orient.beta)
+             .rotate_z(orient.gamma) +
+           center;
+  }
+
+  void draw_edges(Frame frame, double dt)
+  {
+    for (auto e : edges) {
+      Point p = apply_orientation(vertices[e[0]]);
+      Point q = apply_orientation(vertices[e[1]]);
+      for (float t = 0; t <= 1; t += dt) {
+        Point edge = p * t + q * (1 - t);
+        int edge_x = std::round(frame.sigma * (edge.x / edge.z));
+        int edge_y = std::round(frame.sigma * (edge.y / edge.z));
+        if (edge_x < frame.FRAME_X && edge_y < frame.FRAME_Y) {
+          if (frame.frame[edge_x][edge_y] < 3)
+            // shaders come here
+            frame.frame[edge_x][edge_y] = 2;
+        }
+      }
+    }
+  };
+
+  void draw_vertices(Frame frame)
+  {
+    for (auto v : vertices) {
+      Point p = apply_orientation(v);
+      int p_x = std::round(frame.sigma * (p.x / p.z));
+      int p_y = std::round(frame.sigma * (p.y / p.z));
+      if (p_x < frame.FRAME_X && p_y < frame.FRAME_Y) {
+        if (frame.frame[p_x][p_y] < 6)
+          frame.frame[p_x][p_y] = 4;
+      }
+    }
   }
 };
