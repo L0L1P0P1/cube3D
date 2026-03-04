@@ -1,107 +1,17 @@
-#include <cmath>
+#include "cube.h"
 #include <ctime>
 #include <iostream>
 #include <thread>
-#include <vector>
 
-class Point
-{
-public:
-  double x;
-  double y;
-  double z;
-  Point(double x, double y, double z)
-    : x(x)
-    , y(y)
-    , z(z)
-  {
-  }
-
-  Point rotate_x(double alpha)
-  {
-    return Point(x,
-                 y * std::cos(alpha) - z * std::sin(alpha),
-                 y * std::sin(alpha) + z * std::cos(alpha));
-  }
-
-  Point rotate_y(double beta)
-  {
-    return Point(x * std::cos(beta) + z * std::sin(beta),
-                 y,
-                 -x * std::sin(beta) + z * std::cos(beta));
-  }
-
-  Point rotate_z(double gamma)
-  {
-    return Point(x * std::cos(gamma) - y * std::sin(gamma),
-                 x * std::sin(gamma) + y * std::cos(gamma),
-                 z);
-  }
-
-  Point operator+(Point rhs) { return Point(x + rhs.x, y + rhs.y, z + rhs.z); }
-  Point operator-(Point rhs) { return Point(x - rhs.x, y - rhs.y, z - rhs.z); }
-  Point operator*(float scalar)
-  {
-    return Point(x * scalar, y * scalar, z * scalar);
-  }
-};
-
-struct Orientation
-{
-  double alpha;
-  double beta;
-  double gamma;
-
-  Orientation(double alpha, double beta, double gamma)
-    : alpha(alpha)
-    , beta(beta)
-    , gamma(gamma)
-  {
-  }
-
-  Orientation operator+(Orientation rhs)
-  {
-    return Orientation(alpha + rhs.alpha, beta + rhs.beta, gamma + rhs.gamma);
-  }
-  Orientation operator-(Orientation rhs)
-  {
-    return Orientation(alpha - rhs.alpha, beta - rhs.beta, gamma - rhs.gamma);
-  }
-
-  Orientation operator+=(Orientation rhs) { return *this + rhs; }
-};
-
-class Object3D
-{
-public:
-  std::vector<Point> vertices;
-  Point center = Point(0, 0, 0);
-  Orientation orient = Orientation(0, 0, 0);
-
-  // Object3D(std::vector<Point> vertices, int edges[][2])
-  //   : vertices(vertices)
-  //   , edges(edges)
-  // {
-  // }
-
-  Object3D(std::vector<Point> vertices)
-    : vertices(vertices)
-  {
-  }
-
-  std::vector<Point> get_vertices()
-  {
-    std::vector<Point> new_vertices;
-    for (auto v : vertices) {
-      new_vertices.push_back(
-        v.rotate_x(orient.alpha).rotate_y(orient.beta).rotate_z(orient.gamma) +
-        center);
-    }
-
-    return new_vertices;
-  }
-  int edges[][2];
-};
+const int FRAME_X = 32;
+const int FRAME_Y = 32;
+const int fps = 60;
+const double speed = 1.25;
+const float dt = 0.05;
+const float z = 6;
+const float dz = 1.1;
+const float sigma = 20;
+const float dtheta = 0.02;
 
 int
 is_drawn(int i, int j, std::vector<Point> vertices, double z, double sigma)
@@ -151,33 +61,71 @@ is_drawn(int i,
 }
 
 std::vector<Point>
-interpolate_vertices(std::vector<Point> vertices, int edges[][2], float dt)
+interpolate_vertices(std::vector<Point> vertices,
+                     std::vector<std::vector<int>> edges,
+                     float dt)
 {
   std::vector<Point> edge_vertices;
-  for (int i = 0; i < 12; i++) {
+  for (auto e : edges) {
     for (float t = 0; t < 1; t += dt) {
       if (t == 0)
         continue;
       else
-        edge_vertices.push_back(vertices[edges[i][0]] * t +
-                                vertices[edges[i][1]] * (1 - t));
+        edge_vertices.push_back(vertices[e[0]] * t + vertices[e[1]] * (1 - t));
     }
   }
   return edge_vertices;
 }
 
+std::vector<std::vector<int>>
+initiate_frame(int x, int y)
+{
+  std::vector<std::vector<int>> frame;
+  for (int i = 0; i < x; i++) {
+    std::vector<int> row;
+    for (int j = 0; j < y; j++) {
+      row.push_back(0);
+    }
+  }
+  return frame;
+}
+
+void
+draw_frame(std::vector<std::vector<int>> frame)
+{
+  std::cout << "\033[2J\n";
+  for (auto i : frame) {
+    for (auto j = i.begin(); j < i.end(); ++j) {
+      switch (*j) {
+        case 3:
+          std::cout << "@@";
+          break;
+        case 2:
+          std::cout << "oo";
+          break;
+        case 1:
+          std::cout << ". ";
+          break;
+        case -1:
+          std::cout << ". ";
+          break;
+        case -2:
+          std::cout << "  ";
+          break;
+        case 0:
+          std::cout << "  ";
+          break;
+      }
+      *j = 0;
+    }
+  }
+};
+
 int
 main()
 {
   using namespace std::chrono;
-  int fps = 60;
-  int frame_time = 1000 / fps;
-  double speed = 1.25;
-  float dt = 0.05;
-  float z = 6;
-  float sigma = 23;
-  float dz = 1.1;
-  float dtheta = 0.02;
+
   int term_x = 32, term_y = 32;
   Point c1 = Point(0, 0, 0);
 
@@ -186,19 +134,18 @@ main()
     Point(4, 4, 4),  Point(4, -4, 4),  Point(-4, 4, 4),  Point(-4, -4, 4),
   };
 
-  int edges[][2] = {
-    { 0, 1 }, { 0, 4 }, { 0, 2 }, { 3, 7 }, { 3, 2 }, { 3, 1 },
-    { 6, 7 }, { 6, 2 }, { 6, 4 }, { 5, 4 }, { 5, 1 }, { 5, 7 }
-  };
+  std::vector<std::vector<int>> edges = { { 0, 1 }, { 0, 4 }, { 0, 2 },
+                                          { 3, 7 }, { 3, 2 }, { 3, 1 },
+                                          { 6, 7 }, { 6, 2 }, { 6, 4 },
+                                          { 5, 4 }, { 5, 1 }, { 5, 7 } };
 
   Object3D cube(vertices);
   cube.center = c1;
 
-  std::cout << "\033[3J" << std::endl;
   double theta = 0;
-
   std::vector<Point> new_vertices = cube.get_vertices();
   std::vector<Point> new_edges = interpolate_vertices(new_vertices, edges, dt);
+
   while (true) {
 
     std::cout << "\033[2J\n\n\n";
@@ -235,6 +182,6 @@ main()
     theta += dtheta;
     new_vertices = cube.get_vertices();
     new_edges = interpolate_vertices(new_vertices, edges, dt);
-    std::this_thread::sleep_for(frame_time * 1ms);
+    std::this_thread::sleep_for((1000 / fps) * 1ms);
   }
 }
