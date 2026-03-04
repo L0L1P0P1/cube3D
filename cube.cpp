@@ -3,15 +3,15 @@
 #include <iostream>
 #include <thread>
 
-const int FRAME_X = 32;
-const int FRAME_Y = 32;
-const int fps = 60;
-const double speed = 1.25;
-const float dt = 0.05;
-const float z = 6;
-const float dz = 1.1;
-const float sigma = 20;
-const float dtheta = 0.02;
+const int FRAME_X = 200;
+const int FRAME_Y = 400;
+const int fps = 100;
+const double speed = 1;
+const float dt = 0.01;
+const float z = 12;
+const float dz = 4;
+const float sigma = 60;
+const float dtheta = 0.005;
 
 int
 is_drawn(int i, int j, std::vector<Point> vertices, double z, double sigma)
@@ -92,11 +92,11 @@ initiate_frame(int x, int y)
 }
 
 void
-show_frame(std::vector<std::vector<int>> frame)
+show_frame(Frame& frame)
 {
-  std::cout << "\033[2J\n";
-  for (auto i : frame) {
-    for (auto j = i.begin(); j < i.end(); ++j) {
+  std::cout << "\033[3J\n";
+  for (auto i = frame.frame.begin(); i < frame.frame.end(); ++i) {
+    for (auto j = i->begin(); j < i->end(); ++j) {
       switch (*j) {
         case 5:
           std::cout << "@@";
@@ -128,9 +128,6 @@ main()
 {
   using namespace std::chrono;
 
-  int term_x = 32, term_y = 32;
-  Point c1 = Point(0, 0, 0);
-
   std::vector<Point> vertices = {
     Point(4, 4, -4), Point(4, -4, -4), Point(-4, 4, -4), Point(-4, -4, -4),
     Point(4, 4, 4),  Point(4, -4, 4),  Point(-4, 4, 4),  Point(-4, -4, 4),
@@ -142,48 +139,21 @@ main()
                                           { 5, 4 }, { 5, 1 }, { 5, 7 } };
 
   Object3D cube(vertices, edges, dt);
-  cube.center = c1;
+  Frame frame(FRAME_X, FRAME_Y, z, sigma);
 
   double theta = 0;
-  std::vector<Point> new_vertices = cube.get_vertices();
-  std::vector<Point> new_edges = interpolate_vertices(new_vertices, edges, dt);
 
   while (true) {
 
-    std::cout << "\033[2J\n\n\n";
-    for (int i = 0; i < term_y; i++) {
-      for (int j = 0; j < term_x; j++) {
-        int vertices_drawn = is_drawn(
-          j - term_x / 2, i - term_y / 2, new_vertices, new_edges, z, sigma);
-        switch (vertices_drawn) {
-          case 3:
-            std::cout << "@@";
-            break;
-          case 2:
-            std::cout << "oo";
-            break;
-          case 1:
-            std::cout << ". ";
-            break;
-          case -1:
-            std::cout << ". ";
-            break;
-          case -2:
-            std::cout << "  ";
-            break;
-          case 0:
-            std::cout << "  ";
-            break;
-        }
-      }
-      std::cout << "\n";
-    }
+    cube.draw_edges(frame);
+    cube.draw_vertices(frame);
+    show_frame(frame);
+
+    // break;
     cube.orient =
       cube.orient + Orientation(0.001 * speed, 0.05 * speed, 0.01 * speed);
-    cube.center = Point(0, 0, -z + dz * std::sin(theta));
+    cube.center = Point(0, 0, dz * std::sin(theta));
     theta += dtheta;
-    new_vertices = cube.get_vertices();
-    new_edges = interpolate_vertices(new_vertices, edges, dt);
     std::this_thread::sleep_for((1000 / fps) * 1ms);
   }
 }

@@ -132,31 +132,35 @@ public:
            center;
   }
 
-  void draw_edges(Frame frame, double dt)
+  void draw_edges(Frame& frame)
   {
     for (auto e : edges) {
       Point p = apply_orientation(vertices[e[0]]);
       Point q = apply_orientation(vertices[e[1]]);
       for (float t = 0; t <= 1; t += dt) {
         Point edge = p * t + q * (1 - t);
-        int edge_x = std::round(frame.sigma * (edge.x / edge.z));
-        int edge_y = std::round(frame.sigma * (edge.y / edge.z));
-        if (edge_x < frame.FRAME_X && edge_y < frame.FRAME_Y) {
-          if (frame.frame[edge_x][edge_y] < 3)
-            // shaders come here
+        int edge_x = std::round(frame.sigma * (edge.x / (edge.z - frame.z)) +
+                                (float)frame.FRAME_X / 2);
+        int edge_y = std::round(frame.sigma * (edge.y / (edge.z - frame.z)) +
+                                (float)frame.FRAME_Y / 2);
+        if (edge_x < frame.FRAME_X && edge_x >= 0 && edge_y < frame.FRAME_Y &&
+            edge_y >= 0) {
+          if (frame.frame[edge_x][edge_y] < 2)
             frame.frame[edge_x][edge_y] = 2;
         }
       }
     }
   };
 
-  void draw_vertices(Frame frame)
+  void draw_vertices(Frame& frame)
   {
     for (auto v : vertices) {
       Point p = apply_orientation(v);
-      int p_x = std::round(frame.sigma * (p.x / p.z));
-      int p_y = std::round(frame.sigma * (p.y / p.z));
-      if (p_x < frame.FRAME_X && p_y < frame.FRAME_Y) {
+      int p_x = std::round(frame.sigma * (p.x / (p.z - frame.z)) +
+                           (float)frame.FRAME_X / 2);
+      int p_y = std::round(frame.sigma * (p.y / (p.z - frame.z)) +
+                           (float)frame.FRAME_Y / 2);
+      if (p_x < frame.FRAME_X && p_x >= 0 && p_y < frame.FRAME_Y && p_y >= 0) {
         if (frame.frame[p_x][p_y] < 6)
           frame.frame[p_x][p_y] = 4;
       }
