@@ -3,8 +3,9 @@
 #include <iostream>
 #include <sstream>
 
-cube3D::Graph3D
-cube3D::parser::parse_to_graph3D(std::string path)
+namespace cube3D {
+Graph3D
+parser::parse_to_graph3D(std::string path)
 {
 
   std::ifstream file(path);
@@ -53,3 +54,44 @@ cube3D::parser::parse_to_graph3D(std::string path)
 
   return Graph3D(vertices, edges);
 };
+
+Mesh3D
+parser::parse_to_mesh3D(std::string path)
+{
+
+  std::ifstream file(path);
+  if (!file.is_open()) {
+    throw std::runtime_error("couldn't open " + path);
+  }
+
+  std::vector<Point> vertices;
+  std::vector<Edge> edges;
+
+  std::string line;
+  int vertexIndex = 0;
+
+  std::vector<std::vector<int>> faces;
+
+  while (std::getline(file, line)) {
+    std::istringstream iss(line);
+    std::string type;
+    iss >> type;
+
+    if (type == "v") {
+      float x, y, z;
+      iss >> x >> y >> z;
+      vertices.push_back(Point(x, y, z));
+      vertexIndex++;
+    } else if (type == "f") {
+      std::vector<int> face;
+      std::string vert;
+      while (iss >> vert) {
+        int idx = std::stoi(vert.substr(0, vert.find('/')));
+        int simplifiedIdx = idx - 1;
+        face.push_back(simplifiedIdx);
+      }
+      faces.push_back(face);
+    }
+  }
+};
+}

@@ -56,12 +56,12 @@ struct Point
 
 struct Edge
 {
-  int from, to;
+  const int from, to;
 };
 
 struct Triangle
 {
-  int p1, p2, p3;
+  const int p1, p2, p3;
 };
 
 struct Orientation
@@ -124,10 +124,12 @@ public:
 
   Mesh3D(std::vector<Point>, std::vector<Triangle>, double);
   Point apply_orientation(Point&);
+  void draw_triangles(Frame&, float);
 };
 
 namespace parser {
 Graph3D parse_to_graph3D(std::string);
+Mesh3D parse_to_mesh3D(std::string);
 }
 
 namespace presets {
@@ -135,5 +137,7 @@ void
 draw_penger();
 void
 draw_cube();
+void
+draw_tux();
 }
 }

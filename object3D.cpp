@@ -79,5 +79,32 @@ Mesh3D::apply_orientation(Point& point)
            .rotate_z(orient.gamma) +
          center;
 }
+void
+Mesh3D::draw_triangles(Frame& frame, float ds)
+{
+  for (auto t : triangles) {
+    Point p1 = apply_orientation(vertices[t.p1]);
+    Point p2 = apply_orientation(vertices[t.p2]);
+    Point p3 = apply_orientation(vertices[t.p3]);
+    // using barycentric coordinates a*p1+b*p2+c*p3 = p
+    // such that a+b+c=1 and a,b,c >= 0
+    for (float a = ds; a < 1 - ds; a += ds)
+      for (float b = ds; b < 1 - ds; b += ds) {
+        float c = 1 - a - b;
+        Point p = p1 * a + p2 * b + p3 * c;
+        int p_x =
+          std::round(frame.focal_length * (p.x / (p.z - frame.z_level)) +
+                     (float)frame.height / 2);
+        int p_y =
+          std::round(frame.focal_length * (p.y / (p.z - frame.z_level)) +
+                     (float)frame.width / 2);
+        if (p_x < frame.height && p_x >= 0 && p_y < frame.width && p_y >= 0 &&
+            frame.z_level > p.z && p.z > frame.get_z(p_x, p_y)) {
+          frame(p_x, p_y) = 1;
+          frame.get_z(p_x, p_y);
+        }
+      }
+  }
+}
 
 }

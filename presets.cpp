@@ -44,6 +44,47 @@ cube3D::presets::draw_penger()
 }
 
 void
+cube3D::presets::draw_tux()
+{
+  const int height = 200;
+  const int width = 400;
+  const int fps = 100;
+  const double speed = 0.1;
+  const float dt = 0.005;
+  const float z_level = 100;
+  const float dz = 0;
+  const float focal_length = 450;
+  const float dtheta = 0.005;
+  cube3D::Orientation orient(0, 0, 0);
+  cube3D::Point center(1.6, 0, 0);
+
+  cube3D::Graph3D penger = cube3D::parser::parse_to_graph3D("obj/tux.obj");
+  penger.orient = orient;
+  penger.center = center;
+  cube3D::Frame frame(height, width, z_level, focal_length);
+
+  using namespace std::chrono;
+
+  double theta = 0;
+
+  while (true) {
+
+    // draw and show
+    penger.draw_edges(frame, dt);
+    penger.draw_vertices(frame);
+    frame.show();
+
+    // animate next frames
+    penger.orient = penger.orient + cube3D::Orientation(
+                                      0.05 * speed, 0.00 * speed, 0.0 * speed);
+    theta += dtheta;
+
+    // sleep to have stuff visible
+    std::this_thread::sleep_for((1000 / fps) * 1ms);
+  }
+}
+
+void
 cube3D::presets::draw_cube()
 {
 
