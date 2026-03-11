@@ -5,7 +5,46 @@
 
 namespace cube3D {
 
-struct Vector2D {};
+class Frame {
+public:
+  int height;
+  int width;
+  float z_level;
+  float focal_length;
+
+  struct DepthBuffer {
+    std::vector<float> buffer;
+    int height;
+    int width;
+    float render_distance;
+
+    DepthBuffer(int, int, float);
+    inline float &get_z(int x, int y) { return buffer[(x * width) + y]; }
+    inline float &operator()(int x, int y) { return this->get_z(x, y); }
+  };
+
+  std::vector<int> pixel_grid;
+  DepthBuffer depth_buffer;
+
+  Frame(int, int, float, float);
+
+  inline int &get_pixel(int x, int y) { return pixel_grid[(x * width) + y]; }
+  inline int &operator()(int x, int y) { return this->get_pixel(x, y); }
+
+  void show();
+};
+
+struct Vector2D {
+  double x;
+  double y;
+  Vector2D(double x, double y) : x(x), y(y) {}
+
+  inline Vector2D operator*(double rhs) { return Vector2D(x * rhs, y * rhs); }
+  inline Vector2D operator+(Vector2D rhs) {
+    return Vector2D(x + rhs.x, y + rhs.y);
+  }
+  inline Vector2D operator-(Vector2D rhs) { return (*this) + rhs * -1; }
+};
 
 struct Vector3D {
   double x;
@@ -26,6 +65,11 @@ struct Vector3D {
   inline Vector3D rotate_z(double gamma) {
     return Vector3D(x * std::cos(gamma) - y * std::sin(gamma),
                     x * std::sin(gamma) + y * std::cos(gamma), z);
+  }
+
+  inline Vector2D perspective_project(Frame &frame) {
+    return Vector2D(x / (z + frame.z_level), y / (z + frame.z_level)) *
+           frame.focal_length;
   }
 
   inline Vector3D operator+(Vector3D rhs) {
@@ -59,26 +103,6 @@ struct Orientation {
     return Orientation(alpha - rhs.alpha, beta - rhs.beta, gamma - rhs.gamma);
   }
   inline Orientation operator+=(Orientation rhs) { return *this + rhs; }
-};
-
-class Frame {
-public:
-  const int height;
-  const int width;
-  float z_level;
-  float focal_length;
-  float render_distance;
-
-  std::vector<int> pixel_grid;
-  std::vector<float> z_buffer;
-
-  Frame(int, int, float, float);
-
-  inline int &get_pixel(int x, int y) { return pixel_grid[(x * width) + y]; }
-  inline float &get_z(int x, int y) { return z_buffer[(x * width) + y]; }
-  inline int &operator()(int x, int y) { return this->get_pixel(x, y); }
-
-  void show();
 };
 
 class Graph3D {
@@ -117,4 +141,5 @@ void draw_cube();
 void draw_tux();
 void draw_sample_shape();
 } // namespace presets
+
 } // namespace cube3D

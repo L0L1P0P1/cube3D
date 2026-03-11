@@ -25,16 +25,16 @@ void Graph3D::draw_edges(cube3D::Frame &frame, float dt) {
     for (float t = 0; t <= 1; t += dt) {
       Vector3D edge = p * t + q * (1 - t);
       int edge_x =
-          std::round(frame.focal_length * (edge.x / (edge.z - frame.z_level)) +
+          std::round(frame.focal_length * (edge.x / (edge.z + frame.z_level)) +
                      (float)frame.height / 2);
       int edge_y =
-          std::round(frame.focal_length * (edge.y / (edge.z - frame.z_level)) +
+          std::round(frame.focal_length * (edge.y / (edge.z + frame.z_level)) +
                      (float)frame.width / 2);
       if (edge_x < frame.height && edge_x >= 0 && edge_y < frame.width &&
           edge_y >= 0 && frame.z_level > edge.z &&
-          edge.z > frame.get_z(edge_x, edge_y)) {
+          edge.z > frame.depth_buffer(edge_x, edge_y)) {
         frame(edge_x, edge_y) = 1;
-        frame.get_z(edge_x, edge_y) = edge.z;
+        frame.depth_buffer(edge_x, edge_y) = edge.z;
       }
     }
   }
@@ -42,14 +42,14 @@ void Graph3D::draw_edges(cube3D::Frame &frame, float dt) {
 void Graph3D::draw_vertices(cube3D::Frame &frame) {
   for (auto v : vertices) {
     Vector3D p = apply_orientation(v);
-    int p_x = std::round(frame.focal_length * (p.x / (p.z - frame.z_level)) +
+    int p_x = std::round(frame.focal_length * (p.x / (p.z + frame.z_level)) +
                          (float)frame.height / 2);
-    int p_y = std::round(frame.focal_length * (p.y / (p.z - frame.z_level)) +
+    int p_y = std::round(frame.focal_length * (p.y / (p.z + frame.z_level)) +
                          (float)frame.width / 2);
     if (p_x < frame.height && p_x >= 0 && p_y < frame.width && p_y >= 0 &&
-        frame.z_level > p.z && p.z > frame.get_z(p_x, p_y)) {
+        frame.z_level > p.z && p.z > frame.depth_buffer(p_x, p_y)) {
       frame(p_x, p_y) = 1;
-      frame.get_z(p_x, p_y);
+      frame.depth_buffer(p_x, p_y);
     }
   }
 };
@@ -76,15 +76,15 @@ void Mesh3D::draw_triangles(Frame &frame, float ds) {
         float c = 1 - a - b;
         Vector3D p = p1 * a + p2 * b + p3 * c;
         int p_x =
-            std::round(frame.focal_length * (p.x / (p.z - frame.z_level)) +
+            std::round(frame.focal_length * (p.x / (p.z + frame.z_level)) +
                        (float)frame.height / 2);
         int p_y =
-            std::round(frame.focal_length * (p.y / (p.z - frame.z_level)) +
+            std::round(frame.focal_length * (p.y / (p.z + frame.z_level)) +
                        (float)frame.width / 2);
         if (p_x < frame.height && p_x >= 0 && p_y < frame.width && p_y >= 0 &&
-            frame.z_level > p.z && p.z > frame.get_z(p_x, p_y)) {
+            frame.z_level > p.z && p.z > frame.depth_buffer(p_x, p_y)) {
           frame(p_x, p_y) = 1;
-          frame.get_z(p_x, p_y);
+          frame.depth_buffer(p_x, p_y);
         }
       }
   }
