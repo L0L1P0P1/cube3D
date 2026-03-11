@@ -5,11 +5,8 @@
 namespace cube3D {
 
 Frame::Frame(int height, int width, float z_level, float focal_length)
-  : height(height)
-  , width(width)
-  , z_level(z_level)
-  , focal_length(focal_length)
-{
+    : height(height), width(width), z_level(z_level),
+      focal_length(focal_length) {
   render_distance = -std::numeric_limits<float>::infinity();
   pixel_grid.reserve(height * width);
   z_buffer.reserve(height * width);
@@ -18,9 +15,7 @@ Frame::Frame(int height, int width, float z_level, float focal_length)
   }
 }
 
-void
-Frame::show()
-{
+void Frame::show() {
   std::cout << "\033[3J\n";
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
@@ -37,4 +32,4 @@ Frame::show()
   }
 };
 
-}
+} // namespace cube3D

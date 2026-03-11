@@ -2,9 +2,7 @@
 #include <ctime>
 #include <thread>
 
-void
-cube3D::presets::draw_penger()
-{
+void cube3D::presets::draw_penger() {
   const int height = 200;
   const int width = 400;
   const int fps = 100;
@@ -27,15 +25,15 @@ cube3D::presets::draw_penger()
   double theta = 0;
 
   while (true) {
-
     // draw and show
     penger.draw_edges(frame, dt);
     penger.draw_vertices(frame);
     frame.show();
 
     // animate next frames
-    penger.orient = penger.orient + cube3D::Orientation(
-                                      0.00 * speed, 0.05 * speed, 0.0 * speed);
+    penger.orient =
+        penger.orient +
+        cube3D::Orientation(0.00 * speed, 0.05 * speed, 0.0 * speed);
     theta += dtheta;
 
     // sleep to have stuff visible
@@ -43,9 +41,7 @@ cube3D::presets::draw_penger()
   }
 }
 
-void
-cube3D::presets::draw_tux()
-{
+void cube3D::presets::draw_tux() {
   const int height = 200;
   const int width = 400;
   const int fps = 100;
@@ -68,15 +64,15 @@ cube3D::presets::draw_tux()
   double theta = 0;
 
   while (true) {
-
     // draw and show
     penger.draw_edges(frame, dt);
     penger.draw_vertices(frame);
     frame.show();
 
     // animate next frames
-    penger.orient = penger.orient + cube3D::Orientation(
-                                      0.05 * speed, 0.00 * speed, 0.0 * speed);
+    penger.orient =
+        penger.orient +
+        cube3D::Orientation(0.05 * speed, 0.00 * speed, 0.0 * speed);
     theta += dtheta;
 
     // sleep to have stuff visible
@@ -84,9 +80,7 @@ cube3D::presets::draw_tux()
   }
 }
 
-void
-cube3D::presets::draw_sample_shape()
-{
+void cube3D::presets::draw_sample_shape() {
   const int height = 200;
   const int width = 400;
   const int fps = 100;
@@ -100,7 +94,7 @@ cube3D::presets::draw_sample_shape()
   cube3D::Vector3D center(0, 0, 0);
 
   cube3D::Mesh3D sample_shape =
-    cube3D::parser::parse_to_mesh3D("obj/sample_shape.obj");
+      cube3D::parser::parse_to_mesh3D("obj/sample_shape.obj");
   sample_shape.orient = orient;
   sample_shape.center = center;
   cube3D::Frame frame(height, width, z_level, focal_length);
@@ -110,15 +104,14 @@ cube3D::presets::draw_sample_shape()
   double theta = 0;
 
   while (true) {
-
     // draw and show
     sample_shape.draw_triangles(frame, ds);
     frame.show();
 
     // animate next frames
     sample_shape.orient =
-      sample_shape.orient +
-      cube3D::Orientation(0.00 * speed, 0.05 * speed, 0.05 * speed);
+        sample_shape.orient +
+        cube3D::Orientation(0.00 * speed, 0.05 * speed, 0.05 * speed);
     theta += dtheta;
 
     // sleep to have stuff visible
@@ -126,10 +119,7 @@ cube3D::presets::draw_sample_shape()
   }
 }
 
-void
-cube3D::presets::draw_cube()
-{
-
+void cube3D::presets::draw_cube() {
   const int height = 90;
   const int width = 180;
   const int fps = 100;
@@ -144,14 +134,13 @@ cube3D::presets::draw_cube()
   using namespace cube3D;
 
   std::vector<Vector3D> vertices = {
-    Vector3D(4, 4, -4),   Vector3D(4, -4, -4), Vector3D(-4, 4, -4),
-    Vector3D(-4, -4, -4), Vector3D(4, 4, 4),   Vector3D(4, -4, 4),
-    Vector3D(-4, 4, 4),   Vector3D(-4, -4, 4),
+      Vector3D(4, 4, -4),   Vector3D(4, -4, -4), Vector3D(-4, 4, -4),
+      Vector3D(-4, -4, -4), Vector3D(4, 4, 4),   Vector3D(4, -4, 4),
+      Vector3D(-4, 4, 4),   Vector3D(-4, -4, 4),
   };
 
-  std::vector<Edge> edges = { { 0, 1 }, { 0, 4 }, { 0, 2 }, { 3, 7 },
-                              { 3, 2 }, { 3, 1 }, { 6, 7 }, { 6, 2 },
-                              { 6, 4 }, { 5, 4 }, { 5, 1 }, { 5, 7 } };
+  std::vector<Edge> edges = {{0, 1}, {0, 4}, {0, 2}, {3, 7}, {3, 2}, {3, 1},
+                             {6, 7}, {6, 2}, {6, 4}, {5, 4}, {5, 1}, {5, 7}};
 
   Graph3D cube(vertices, edges);
   Frame frame(height, width, z_level, focal_length);
@@ -159,7 +148,6 @@ cube3D::presets::draw_cube()
   double theta = 0;
 
   while (true) {
-
     // draw and show
     cube.draw_edges(frame, dt);
     cube.draw_vertices(frame);
@@ -167,7 +155,7 @@ cube3D::presets::draw_cube()
 
     // animate next frames
     cube.orient =
-      cube.orient + Orientation(0.001 * speed, 0.05 * speed, 0.01 * speed);
+        cube.orient + Orientation(0.001 * speed, 0.05 * speed, 0.01 * speed);
     cube.center = Vector3D(0, 0, dz * std::sin(theta));
     theta += dtheta;
 

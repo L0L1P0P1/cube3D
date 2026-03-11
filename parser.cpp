@@ -4,9 +4,7 @@
 #include <sstream>
 
 namespace cube3D {
-Graph3D
-parser::parse_to_graph3D(std::string path)
-{
+Graph3D parser::parse_to_graph3D(std::string path) {
 
   std::ifstream file(path);
   if (!file.is_open()) {
@@ -43,21 +41,19 @@ parser::parse_to_graph3D(std::string path)
     }
   }
 
-  for (auto& face : faces) {
+  for (auto &face : faces) {
     int n = face.size();
     for (int i = 0; i < n; ++i) {
       int from = face[i];
       int to = face[(i + 1) % n];
-      edges.push_back({ from, to });
+      edges.push_back({from, to});
     }
   }
 
   return Graph3D(vertices, edges);
 };
 
-Mesh3D
-parser::parse_to_mesh3D(std::string path)
-{
+Mesh3D parser::parse_to_mesh3D(std::string path) {
 
   std::ifstream file(path);
   if (!file.is_open()) {
@@ -89,10 +85,10 @@ parser::parse_to_mesh3D(std::string path)
         face.push_back(simplifiedIdx);
       }
       if (face.size() == 3)
-        triangles.push_back({ face[0], face[1], face[2] });
+        triangles.push_back({face[0], face[1], face[2]});
       else if (face.size() > 3) {
         for (int i = 1; i < face.size() - 1; i++) {
-          triangles.push_back({ face[0], face[i], face[i + 1] });
+          triangles.push_back({face[0], face[i], face[i + 1]});
         }
       }
     }
@@ -100,4 +96,4 @@ parser::parse_to_mesh3D(std::string path)
 
   return Mesh3D(vertices, triangles);
 };
-}
+} // namespace cube3D
