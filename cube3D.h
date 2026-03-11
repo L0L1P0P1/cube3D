@@ -5,52 +5,52 @@
 
 namespace cube3D {
 
-struct Point
+struct Vector3D
 {
   double x;
   double y;
   double z;
-  Point(double x, double y, double z)
+  Vector3D(double x, double y, double z)
     : x(x)
     , y(y)
     , z(z)
   {
   }
 
-  inline Point rotate_x(double alpha)
+  inline Vector3D rotate_x(double alpha)
   {
-    return Point(x,
-                 y * std::cos(alpha) - z * std::sin(alpha),
-                 y * std::sin(alpha) + z * std::cos(alpha));
+    return Vector3D(x,
+                    y * std::cos(alpha) - z * std::sin(alpha),
+                    y * std::sin(alpha) + z * std::cos(alpha));
   }
 
-  inline Point rotate_y(double beta)
+  inline Vector3D rotate_y(double beta)
   {
-    return Point(x * std::cos(beta) + z * std::sin(beta),
-                 y,
-                 -x * std::sin(beta) + z * std::cos(beta));
+    return Vector3D(x * std::cos(beta) + z * std::sin(beta),
+                    y,
+                    -x * std::sin(beta) + z * std::cos(beta));
   }
 
-  inline Point rotate_z(double gamma)
+  inline Vector3D rotate_z(double gamma)
   {
-    return Point(x * std::cos(gamma) - y * std::sin(gamma),
-                 x * std::sin(gamma) + y * std::cos(gamma),
-                 z);
+    return Vector3D(x * std::cos(gamma) - y * std::sin(gamma),
+                    x * std::sin(gamma) + y * std::cos(gamma),
+                    z);
   }
 
-  inline Point operator+(Point rhs)
+  inline Vector3D operator+(Vector3D rhs)
   {
-    return Point(x + rhs.x, y + rhs.y, z + rhs.z);
+    return Vector3D(x + rhs.x, y + rhs.y, z + rhs.z);
   }
 
-  inline Point operator-(Point rhs)
+  inline Vector3D operator-(Vector3D rhs)
   {
-    return Point(x - rhs.x, y - rhs.y, z - rhs.z);
+    return Vector3D(x - rhs.x, y - rhs.y, z - rhs.z);
   }
 
-  inline Point operator*(float scalar)
+  inline Vector3D operator*(float scalar)
   {
-    return Point(x * scalar, y * scalar, z * scalar);
+    return Vector3D(x * scalar, y * scalar, z * scalar);
   }
 };
 
@@ -103,13 +103,13 @@ public:
 class Graph3D
 {
 public:
-  std::vector<Point> vertices;
+  std::vector<Vector3D> vertices;
   std::vector<Edge> edges;
-  Point center = Point(0, 0, 0);
+  Vector3D center = Vector3D(0, 0, 0);
   Orientation orient = Orientation(0, 0, 0);
 
-  Graph3D(std::vector<Point>, std::vector<Edge>);
-  Point apply_orientation(Point&);
+  Graph3D(std::vector<Vector3D>, std::vector<Edge>);
+  Vector3D apply_orientation(Vector3D&);
   void draw_edges(Frame&, float);
   void draw_vertices(Frame&);
 };
@@ -117,13 +117,13 @@ public:
 class Mesh3D
 {
 public:
-  std::vector<Point> vertices;
+  std::vector<Vector3D> vertices;
   std::vector<Triangle> triangles;
-  Point center = Point(0, 0, 0);
+  Vector3D center = Vector3D(0, 0, 0);
   Orientation orient = Orientation(0, 0, 0);
 
-  Mesh3D(std::vector<Point>, std::vector<Triangle>, double);
-  Point apply_orientation(Point&);
+  Mesh3D(std::vector<Vector3D>, std::vector<Triangle>);
+  Vector3D apply_orientation(Vector3D&);
   void draw_triangles(Frame&, float);
 };
 
@@ -139,5 +139,7 @@ void
 draw_cube();
 void
 draw_tux();
+void
+draw_sample_shape();
 }
 }

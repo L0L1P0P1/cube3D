@@ -4,5 +4,5 @@
 int
 main()
 {
-  cube3D::presets::draw_tux();
+  cube3D::presets::draw_sample_shape();
 }

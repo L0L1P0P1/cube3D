@@ -15,7 +15,7 @@ cube3D::presets::draw_penger()
   const float focal_length = 750;
   const float dtheta = 0.005;
   cube3D::Orientation orient(0, 0, -1.5707963);
-  cube3D::Point center(-0.6, 0, 0);
+  cube3D::Vector3D center(-0.6, 0, 0);
 
   cube3D::Graph3D penger = cube3D::parser::parse_to_graph3D("obj/penger.obj");
   penger.orient = orient;
@@ -50,13 +50,13 @@ cube3D::presets::draw_tux()
   const int width = 400;
   const int fps = 100;
   const double speed = 0.1;
-  const float dt = 0.005;
+  const float dt = 0.05;
   const float z_level = 100;
   const float dz = 0;
   const float focal_length = 450;
   const float dtheta = 0.005;
   cube3D::Orientation orient(0, 0, 0);
-  cube3D::Point center(1.6, 0, 0);
+  cube3D::Vector3D center(1.6, 0, 0);
 
   cube3D::Graph3D penger = cube3D::parser::parse_to_graph3D("obj/tux.obj");
   penger.orient = orient;
@@ -85,6 +85,48 @@ cube3D::presets::draw_tux()
 }
 
 void
+cube3D::presets::draw_sample_shape()
+{
+  const int height = 200;
+  const int width = 400;
+  const int fps = 100;
+  const double speed = 0.05;
+  const float ds = 0.02;
+  const float z_level = 8;
+  const float dz = 5;
+  const float focal_length = 500;
+  const float dtheta = 0.005;
+  cube3D::Orientation orient(0, 0, -1.5707963);
+  cube3D::Vector3D center(0, 0, 0);
+
+  cube3D::Mesh3D sample_shape =
+    cube3D::parser::parse_to_mesh3D("obj/sample_shape.obj");
+  sample_shape.orient = orient;
+  sample_shape.center = center;
+  cube3D::Frame frame(height, width, z_level, focal_length);
+
+  using namespace std::chrono;
+
+  double theta = 0;
+
+  while (true) {
+
+    // draw and show
+    sample_shape.draw_triangles(frame, ds);
+    frame.show();
+
+    // animate next frames
+    sample_shape.orient =
+      sample_shape.orient +
+      cube3D::Orientation(0.00 * speed, 0.05 * speed, 0.05 * speed);
+    theta += dtheta;
+
+    // sleep to have stuff visible
+    std::this_thread::sleep_for((1000 / fps) * 1ms);
+  }
+}
+
+void
 cube3D::presets::draw_cube()
 {
 
@@ -101,9 +143,10 @@ cube3D::presets::draw_cube()
   using namespace std::chrono;
   using namespace cube3D;
 
-  std::vector<Point> vertices = {
-    Point(4, 4, -4), Point(4, -4, -4), Point(-4, 4, -4), Point(-4, -4, -4),
-    Point(4, 4, 4),  Point(4, -4, 4),  Point(-4, 4, 4),  Point(-4, -4, 4),
+  std::vector<Vector3D> vertices = {
+    Vector3D(4, 4, -4),   Vector3D(4, -4, -4), Vector3D(-4, 4, -4),
+    Vector3D(-4, -4, -4), Vector3D(4, 4, 4),   Vector3D(4, -4, 4),
+    Vector3D(-4, 4, 4),   Vector3D(-4, -4, 4),
   };
 
   std::vector<Edge> edges = { { 0, 1 }, { 0, 4 }, { 0, 2 }, { 3, 7 },
@@ -125,7 +168,7 @@ cube3D::presets::draw_cube()
     // animate next frames
     cube.orient =
       cube.orient + Orientation(0.001 * speed, 0.05 * speed, 0.01 * speed);
-    cube.center = Point(0, 0, dz * std::sin(theta));
+    cube.center = Vector3D(0, 0, dz * std::sin(theta));
     theta += dtheta;
 
     // sleep to have stuff visible

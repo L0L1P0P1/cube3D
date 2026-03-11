@@ -13,7 +13,7 @@ parser::parse_to_graph3D(std::string path)
     throw std::runtime_error("couldn't open " + path);
   }
 
-  std::vector<Point> vertices;
+  std::vector<Vector3D> vertices;
   std::vector<Edge> edges;
 
   std::string line;
@@ -29,7 +29,7 @@ parser::parse_to_graph3D(std::string path)
     if (type == "v") {
       float x, y, z;
       iss >> x >> y >> z;
-      vertices.push_back(Point(x, y, z));
+      vertices.push_back(Vector3D(x, y, z));
       vertexIndex++;
     } else if (type == "f") {
       std::vector<int> face;
@@ -64,13 +64,11 @@ parser::parse_to_mesh3D(std::string path)
     throw std::runtime_error("couldn't open " + path);
   }
 
-  std::vector<Point> vertices;
-  std::vector<Edge> edges;
+  std::vector<Vector3D> vertices;
+  std::vector<Triangle> triangles;
 
   std::string line;
   int vertexIndex = 0;
-
-  std::vector<std::vector<int>> faces;
 
   while (std::getline(file, line)) {
     std::istringstream iss(line);
@@ -80,7 +78,7 @@ parser::parse_to_mesh3D(std::string path)
     if (type == "v") {
       float x, y, z;
       iss >> x >> y >> z;
-      vertices.push_back(Point(x, y, z));
+      vertices.push_back(Vector3D(x, y, z));
       vertexIndex++;
     } else if (type == "f") {
       std::vector<int> face;
@@ -90,8 +88,16 @@ parser::parse_to_mesh3D(std::string path)
         int simplifiedIdx = idx - 1;
         face.push_back(simplifiedIdx);
       }
-      faces.push_back(face);
+      if (face.size() == 3)
+        triangles.push_back({ face[0], face[1], face[2] });
+      else if (face.size() > 3) {
+        for (int i = 1; i < face.size() - 1; i++) {
+          triangles.push_back({ face[0], face[i], face[i + 1] });
+        }
+      }
     }
   }
+
+  return Mesh3D(vertices, triangles);
 };
 }
