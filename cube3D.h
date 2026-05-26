@@ -5,71 +5,43 @@
 
 namespace cube3D {
 
-class Frame {
-public:
-  int height;
-  int width;
-  float z_level;
-  float focal_length;
-
-  struct DepthBuffer {
-    std::vector<float> buffer;
-    int height;
-    int width;
-    float render_distance;
-
-    DepthBuffer(int, int, float);
-    inline float &get_z(int x, int y) { return buffer[(x * width) + y]; }
-    inline float &operator()(int x, int y) { return this->get_z(x, y); }
-  };
-
-  std::vector<int> pixel_grid;
-  DepthBuffer depth_buffer;
-
-  Frame(int, int, float, float);
-
-  inline int &get_pixel(int x, int y) { return pixel_grid[(x * width) + y]; }
-  inline int &operator()(int x, int y) { return this->get_pixel(x, y); }
-
-  void show();
-};
-
 struct Vector2D {
-  double x;
-  double y;
-  Vector2D(double x, double y) : x(x), y(y) {}
+  float x;
+  float y;
+  Vector2D(float x, float y) : x(x), y(y) {}
 
-  inline Vector2D operator*(double rhs) { return Vector2D(x * rhs, y * rhs); }
+  inline Vector2D operator*(float rhs) { return Vector2D(x * rhs, y * rhs); }
   inline Vector2D operator+(Vector2D rhs) {
     return Vector2D(x + rhs.x, y + rhs.y);
   }
   inline Vector2D operator-(Vector2D rhs) { return (*this) + rhs * -1; }
 };
 
-struct Vector3D {
-  double x;
-  double y;
-  double z;
-  Vector3D(double x, double y, double z) : x(x), y(y), z(z) {}
+inline float cross(Vector2D l, Vector2D r) { return l.x * r.y - l.y * r.x; }
 
-  inline Vector3D rotate_x(double alpha) {
+struct Vector3D {
+  float x;
+  float y;
+  float z;
+  Vector3D(float x, float y, float z) : x(x), y(y), z(z) {}
+
+  inline Vector3D rotate_x(float alpha) {
     return Vector3D(x, y * std::cos(alpha) - z * std::sin(alpha),
                     y * std::sin(alpha) + z * std::cos(alpha));
   }
 
-  inline Vector3D rotate_y(double beta) {
+  inline Vector3D rotate_y(float beta) {
     return Vector3D(x * std::cos(beta) + z * std::sin(beta), y,
                     -x * std::sin(beta) + z * std::cos(beta));
   }
 
-  inline Vector3D rotate_z(double gamma) {
+  inline Vector3D rotate_z(float gamma) {
     return Vector3D(x * std::cos(gamma) - y * std::sin(gamma),
                     x * std::sin(gamma) + y * std::cos(gamma), z);
   }
 
-  inline Vector2D perspective_project(Frame &frame) {
-    return Vector2D(x / (z + frame.z_level), y / (z + frame.z_level)) *
-           frame.focal_length;
+  inline Vector2D perspective_project(float z_level, float focal_length) {
+    return Vector2D(x / (z - z_level), y / (z - z_level)) * focal_length;
   }
 
   inline Vector3D operator+(Vector3D rhs) {
@@ -85,17 +57,45 @@ struct Vector3D {
   }
 };
 
+class Frame {
+public:
+  int height;
+  int width;
+  float z_level;
+  float focal_length;
+
+  struct DepthBuffer {
+    std::vector<float> buffer;
+    int height;
+    int width;
+    float render_distance;
+
+    DepthBuffer(int, int, float);
+    // you can change this to constexpr
+    inline float &get_z(int x, int y) { return buffer[(x * width) + y]; }
+    inline float &operator()(int x, int y) { return this->get_z(x, y); }
+  };
+
+  std::vector<int> pixel_grid;
+  DepthBuffer depth_buffer;
+
+  Frame(int, int, float, float);
+
+  inline int &get_pixel(int x, int y) { return pixel_grid[(x * width) + y]; }
+  inline int &operator()(int x, int y) { return this->get_pixel(x, y); }
+
+  inline Vector2D offset() { return Vector2D(height / 2, width / 2); };
+
+  void show();
+};
+
 struct Edge {
   const int from, to;
 };
 
-struct Triangle {
-  const int p1, p2, p3;
-};
-
 struct Orientation {
-  double alpha, beta, gamma;
-  Orientation(double, double, double);
+  float alpha, beta, gamma;
+  Orientation(float, float, float);
   inline Orientation operator+(Orientation rhs) {
     return Orientation(alpha + rhs.alpha, beta + rhs.beta, gamma + rhs.gamma);
   }
@@ -116,6 +116,11 @@ public:
   Vector3D apply_orientation(Vector3D &);
   void draw_edges(Frame &, float);
   void draw_vertices(Frame &);
+};
+
+struct Triangle {
+  const int p0, p1, p2;
+  void rasterize(Frame &, std::vector<Vector3D> &);
 };
 
 class Mesh3D {

@@ -4,9 +4,9 @@
 
 void cube3D::presets::draw_penger() {
   const int height = 200;
-  const int width = 400;
+  const int width = 390;
   const int fps = 100;
-  const double speed = 0.1;
+  const float speed = 0.1;
   const float dt = 0.005;
   const float z_level = 5;
   const float dz = 0;
@@ -22,7 +22,7 @@ void cube3D::presets::draw_penger() {
 
   using namespace std::chrono;
 
-  double theta = 0;
+  float theta = 0;
 
   while (true) {
     // draw and show
@@ -45,14 +45,14 @@ void cube3D::presets::draw_tux() {
   const int height = 200;
   const int width = 400;
   const int fps = 100;
-  const double speed = 0.1;
+  const float speed = 0.1;
   const float dt = 0.05;
   const float z_level = 100;
   const float dz = 0;
   const float focal_length = 450;
   const float dtheta = 0.005;
   cube3D::Orientation orient(0, 0, 0);
-  cube3D::Vector3D center(1.6, 0, 0);
+  cube3D::Vector3D center(0, 0, 0);
 
   cube3D::Graph3D penger = cube3D::parser::parse_to_graph3D("obj/tux.obj");
   penger.orient = orient;
@@ -61,12 +61,11 @@ void cube3D::presets::draw_tux() {
 
   using namespace std::chrono;
 
-  double theta = 0;
+  float theta = 0;
 
   while (true) {
     // draw and show
     penger.draw_edges(frame, dt);
-    penger.draw_vertices(frame);
     frame.show();
 
     // animate next frames
@@ -84,7 +83,7 @@ void cube3D::presets::draw_sample_shape() {
   const int height = 200;
   const int width = 400;
   const int fps = 100;
-  const double speed = 0.05;
+  const float speed = 0.05;
   const float ds = 0.02;
   const float z_level = 8;
   const float dz = 5;
@@ -101,7 +100,7 @@ void cube3D::presets::draw_sample_shape() {
 
   using namespace std::chrono;
 
-  double theta = 0;
+  float theta = 0;
 
   while (true) {
     // draw and show
@@ -123,7 +122,7 @@ void cube3D::presets::draw_cube() {
   const int height = 90;
   const int width = 180;
   const int fps = 100;
-  const double speed = 0.8;
+  const float speed = 0.8;
   const float dt = 0.01;
   const float z_level = 12;
   const float dz = 5;
@@ -145,7 +144,7 @@ void cube3D::presets::draw_cube() {
   Graph3D cube(vertices, edges);
   Frame frame(height, width, z_level, focal_length);
 
-  double theta = 0;
+  float theta = 0;
 
   while (true) {
     // draw and show

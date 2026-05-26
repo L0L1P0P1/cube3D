@@ -4,7 +4,7 @@
 
 namespace cube3D {
 
-Orientation::Orientation(double alpha, double beta, double gamma)
+Orientation::Orientation(float alpha, float beta, float gamma)
     : alpha(alpha), beta(beta), gamma(gamma) {}
 
 Graph3D::Graph3D(std::vector<Vector3D> vertices, std::vector<Edge> edges)
@@ -24,12 +24,11 @@ void Graph3D::draw_edges(cube3D::Frame &frame, float dt) {
     Vector3D q = apply_orientation(vertices[e.to]);
     for (float t = 0; t <= 1; t += dt) {
       Vector3D edge = p * t + q * (1 - t);
-      int edge_x =
-          std::round(frame.focal_length * (edge.x / (edge.z + frame.z_level)) +
-                     (float)frame.height / 2);
-      int edge_y =
-          std::round(frame.focal_length * (edge.y / (edge.z + frame.z_level)) +
-                     (float)frame.width / 2);
+      Vector2D edge_t =
+          edge.perspective_project(frame.z_level, frame.focal_length) +
+          frame.offset();
+      int edge_x = std::round(edge_t.x);
+      int edge_y = std::round(edge_t.y);
       if (edge_x < frame.height && edge_x >= 0 && edge_y < frame.width &&
           edge_y >= 0 && frame.z_level > edge.z &&
           edge.z > frame.depth_buffer(edge_x, edge_y)) {
@@ -42,16 +41,44 @@ void Graph3D::draw_edges(cube3D::Frame &frame, float dt) {
 void Graph3D::draw_vertices(cube3D::Frame &frame) {
   for (auto v : vertices) {
     Vector3D p = apply_orientation(v);
-    int p_x = std::round(frame.focal_length * (p.x / (p.z + frame.z_level)) +
-                         (float)frame.height / 2);
-    int p_y = std::round(frame.focal_length * (p.y / (p.z + frame.z_level)) +
-                         (float)frame.width / 2);
+    Vector2D p_t = p.perspective_project(frame.z_level, frame.focal_length) +
+                   frame.offset();
+    int p_x = std::round(p_t.x);
+    int p_y = std::round(p_t.y);
     if (p_x < frame.height && p_x >= 0 && p_y < frame.width && p_y >= 0 &&
         frame.z_level > p.z && p.z > frame.depth_buffer(p_x, p_y)) {
       frame(p_x, p_y) = 1;
       frame.depth_buffer(p_x, p_y);
     }
   }
+};
+
+void Triangle::rasterize(Frame &frame, std::vector<Vector3D> &vertices) {
+  Vector2D q0 =
+      vertices[p0].perspective_project(frame.z_level, frame.focal_length) +
+      frame.offset();
+  Vector2D q1 =
+      vertices[p1].perspective_project(frame.z_level, frame.focal_length) +
+      frame.offset();
+  Vector2D q2 =
+      vertices[p2].perspective_project(frame.z_level, frame.focal_length) +
+      frame.offset();
+
+  // this just obtains the min and max X,Y for the bounding box
+  // we have to turn this into proper frame
+  // coordinates by including stuff like the middle
+  // of the screen and etc.
+  float minX =
+      std::min(std::min(q0.x, q1.x), std::min(q2.x, (float)frame.height));
+  float minY =
+      std::min(std::min(q0.y, q1.y), std::min(q2.y, (float)frame.width));
+  float maxX = std::max(std::max(q0.x, q1.x), std::max(q2.x, 0.f));
+  float maxY = std::max(std::max(q0.y, q1.y), std::max(q2.y, 0.f));
+
+  minX = minX < 0 ? 0 : minX;
+  minY = minY < 0 ? 0 : minY;
+  maxX = maxX >= frame.height ? frame.height : maxX;
+  maxY = maxY >= frame.width ? frame.width : maxY;
 };
 
 Mesh3D::Mesh3D(std::vector<Vector3D> vertices, std::vector<Triangle> triangles)
@@ -64,9 +91,9 @@ Vector3D Mesh3D::apply_orientation(Vector3D &point) {
 }
 void Mesh3D::draw_triangles(Frame &frame, float ds) {
   for (auto t : triangles) {
+    Vector3D p0 = apply_orientation(vertices[t.p0]);
     Vector3D p1 = apply_orientation(vertices[t.p1]);
     Vector3D p2 = apply_orientation(vertices[t.p2]);
-    Vector3D p3 = apply_orientation(vertices[t.p3]);
     // using barycentric coordinates a*p1+b*p2+c*p3 = p
     // such that a+b+c=1 and a,b,c >= 0
     for (float a = ds; a < 1 - ds; a += ds)
@@ -74,7 +101,7 @@ void Mesh3D::draw_triangles(Frame &frame, float ds) {
         if (a + b >= 1)
           continue;
         float c = 1 - a - b;
-        Vector3D p = p1 * a + p2 * b + p3 * c;
+        Vector3D p = p0 * a + p1 * b + p2 * c;
         int p_x =
             std::round(frame.focal_length * (p.x / (p.z + frame.z_level)) +
                        (float)frame.height / 2);
@@ -84,7 +111,7 @@ void Mesh3D::draw_triangles(Frame &frame, float ds) {
         if (p_x < frame.height && p_x >= 0 && p_y < frame.width && p_y >= 0 &&
             frame.z_level > p.z && p.z > frame.depth_buffer(p_x, p_y)) {
           frame(p_x, p_y) = 1;
-          frame.depth_buffer(p_x, p_y);
+          frame.depth_buffer(p_x, p_y) = p.z;
         }
       }
   }
